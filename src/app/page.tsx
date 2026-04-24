@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const BODY_PARTS = [
   { label: '목', emoji: '🦴' },
@@ -26,6 +27,7 @@ const PURPOSES = [
 ]
 
 export default function Home() {
+  const router = useRouter()
   const [selectedPart, setSelectedPart] = useState<string | null>(null)
   const [selectedPurpose, setSelectedPurpose] = useState<string | null>(null)
 
@@ -37,6 +39,14 @@ export default function Home() {
       : purposeObj?.type === 'medical'
         ? `${selectedPart} 전문 치료사 찾기`
         : `${selectedPart} 전문가 찾기`
+
+  const handleSearch = () => {
+    if (!selectedPart) return
+    const params = new URLSearchParams()
+    params.set('part', selectedPart)
+    if (selectedPurpose) params.set('purpose', selectedPurpose)
+    router.push(`/search?${params.toString()}`)
+  }
 
   return (
     <main className="max-w-md mx-auto min-h-screen bg-white">
@@ -60,16 +70,14 @@ export default function Home() {
           <button
             key={part.label}
             onClick={() => {
-              setSelectedPart(
-                selectedPart === part.label ? null : part.label
-              )
+              setSelectedPart(selectedPart === part.label ? null : part.label)
               setSelectedPurpose(null)
             }}
             className={
               'py-5 rounded-2xl text-center transition-all duration-200 ' +
               (selectedPart === part.label
-                ? 'bg-[#0A8A7B] text-white shadow-lg shadow-[#0A8A7B]/25'
-                : 'bg-gray-50 text-gray-700 border border-gray-100 hover:border-gray-200')
+                ? 'bg-[#0A8A7B] text-white shadow-lg'
+                : 'bg-gray-50 text-gray-700 border border-gray-100')
             }
           >
             <div className="text-xl mb-1">{part.emoji}</div>
@@ -79,22 +87,18 @@ export default function Home() {
       </div>
 
       {selectedPart && (
-        <div className="px-5 mb-8" style={{ animation: 'fadeIn 0.3s ease' }}>
+        <div className="px-5 mb-8">
           <p className="text-sm font-bold text-gray-700 mb-3">
             {selectedPart} · 어떤 도움이 필요하세요?
           </p>
 
           <div className="mb-3">
-            <p className="text-xs text-gray-400 mb-2 font-semibold">
-              🏥 치료 · 재활
-            </p>
+            <p className="text-xs text-gray-400 mb-2 font-semibold">🏥 치료 · 재활</p>
             <div className="flex flex-wrap gap-2">
               {PURPOSES.filter(p => p.type === 'medical').map((purpose) => (
                 <button
                   key={purpose.label}
-                  onClick={() => setSelectedPurpose(
-                    selectedPurpose === purpose.label ? null : purpose.label
-                  )}
+                  onClick={() => setSelectedPurpose(selectedPurpose === purpose.label ? null : purpose.label)}
                   className={
                     'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' +
                     (selectedPurpose === purpose.label
@@ -109,16 +113,12 @@ export default function Home() {
           </div>
 
           <div className="mb-3">
-            <p className="text-xs text-gray-400 mb-2 font-semibold">
-              🏋️ 운동 · 교정
-            </p>
+            <p className="text-xs text-gray-400 mb-2 font-semibold">🏋️ 운동 · 교정</p>
             <div className="flex flex-wrap gap-2">
               {PURPOSES.filter(p => p.type === 'exercise').map((purpose) => (
                 <button
                   key={purpose.label}
-                  onClick={() => setSelectedPurpose(
-                    selectedPurpose === purpose.label ? null : purpose.label
-                  )}
+                  onClick={() => setSelectedPurpose(selectedPurpose === purpose.label ? null : purpose.label)}
                   className={
                     'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' +
                     (selectedPurpose === purpose.label
@@ -133,16 +133,12 @@ export default function Home() {
           </div>
 
           <div>
-            <p className="text-xs text-gray-400 mb-2 font-semibold">
-              🔄 치료 + 운동
-            </p>
+            <p className="text-xs text-gray-400 mb-2 font-semibold">🔄 치료 + 운동</p>
             <div className="flex flex-wrap gap-2">
               {PURPOSES.filter(p => p.type === 'both').map((purpose) => (
                 <button
                   key={purpose.label}
-                  onClick={() => setSelectedPurpose(
-                    selectedPurpose === purpose.label ? null : purpose.label
-                  )}
+                  onClick={() => setSelectedPurpose(selectedPurpose === purpose.label ? null : purpose.label)}
                   className={
                     'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' +
                     (selectedPurpose === purpose.label
@@ -161,10 +157,11 @@ export default function Home() {
       <div className="px-5 pb-8">
         <button
           disabled={!selectedPart}
+          onClick={handleSearch}
           className={
             'w-full py-4 rounded-2xl text-base font-bold transition-all ' +
             (selectedPart
-              ? 'bg-[#0A8A7B] text-white shadow-lg shadow-[#0A8A7B]/25 active:scale-[0.98]'
+              ? 'bg-[#0A8A7B] text-white shadow-lg active:scale-[0.98]'
               : 'bg-gray-100 text-gray-300 cursor-not-allowed')
           }
         >
