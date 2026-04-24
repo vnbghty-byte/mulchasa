@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const BODY_PARTS = [
-  { label: '목', emoji: '🦴' },
+  { label: '목', emoji: '😣' },
   { label: '어깨', emoji: '💪' },
-  { label: '허리', emoji: '🔙' },
+  { label: '허리', emoji: '🧘' },
   { label: '무릎', emoji: '🦵' },
   { label: '손목', emoji: '✋' },
   { label: '발목', emoji: '🦶' },
-  { label: '골반', emoji: '🏃' },
+  { label: '골반', emoji: '🚶' },
   { label: '기타', emoji: '➕' },
 ]
 

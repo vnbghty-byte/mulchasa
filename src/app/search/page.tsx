@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import ConsultFormModal from '@/components/ConsultFormModal'
 
 interface Therapist {
   id: string
@@ -20,6 +21,7 @@ export default function SearchPage() {
   const router = useRouter()
   const [therapists, setTherapists] = useState<Therapist[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null)
 
   const bodyPart = searchParams.get('part')
   const purpose = searchParams.get('purpose')
@@ -66,7 +68,7 @@ export default function SearchPage() {
 
   return (
     <main className="max-w-md mx-auto min-h-screen bg-white">
-      <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center gap-3">
+      <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center gap-3 z-10">
         <button onClick={() => router.back()} className="text-gray-600 text-xl">←</button>
         <div>
           <h1 className="text-lg font-bold text-gray-900">{bodyPart} 전문가 {therapists.length}명</h1>
@@ -94,14 +96,25 @@ export default function SearchPage() {
               </div>
               <p className="text-sm text-gray-600 mb-3">{t.hospital_name || t.studio_name}</p>
               <p className="text-sm text-gray-700 mb-4">{t.intro}</p>
-              <div className="flex gap-2">
-                <a href={t.kakao_link} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 bg-yellow-300 text-gray-900 text-center rounded-xl font-semibold">카톡 상담</a>
-                <a href={`tel:${t.phone}`} className="flex-1 py-3 bg-gray-100 text-gray-700 text-center rounded-xl font-semibold">전화</a>
-              </div>
+              <button
+                onClick={() => setSelectedTherapist(t)}
+                className="w-full py-3 bg-[#FEE500] text-gray-900 text-center rounded-xl font-bold active:scale-[0.98] transition-all"
+              >
+                💬 카톡 상담하기
+              </button>
             </div>
           ))}
         </div>
       )}
+
+      <ConsultFormModal
+        isOpen={selectedTherapist !== null}
+        onClose={() => setSelectedTherapist(null)}
+        therapistName={selectedTherapist?.name || ''}
+        kakaoLink={selectedTherapist?.kakao_link || ''}
+        bodyPart={bodyPart}
+        purpose={purpose}
+      />
     </main>
   )
 }
