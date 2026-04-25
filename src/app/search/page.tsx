@@ -55,7 +55,7 @@ export default function SearchPage() {
 
       if (therapistIds.length === 0) { setTherapists([]); setLoading(false); return }
 
-      const { data: tData } = await supabase.from('therapists').select('*').in('id', therapistIds).order('years_experience', { ascending: false })
+      const { data: tData } = await supabase.from('therapists').select('*').in('id', therapistIds).eq('verification_status', 'verified').order('years_experience', { ascending: false })
       setTherapists(tData || [])
       setLoading(false)
     }

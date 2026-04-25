@@ -175,6 +175,20 @@ export default function Home() {
           물리치료사 면허를 보유하고 있습니다 🛡️
         </p>
       </div>
+
+      <div className="mx-5 mb-8 p-5 bg-gradient-to-br from-[#E8F6F4] to-white border border-[#0A8A7B]/10 rounded-2xl">
+        <p className="text-sm font-bold text-gray-900 mb-1">물리치료사이신가요? 👋</p>
+        <p className="text-xs text-gray-500 leading-relaxed mb-4">
+          물찾사에 가입하고 환자와 직접 연결되세요.<br />
+          면허 인증 후 24시간 내 활성화됩니다.
+        </p>
+        <button
+          onClick={() => router.push('/register')}
+          className="w-full py-3 bg-white border border-[#0A8A7B] text-[#0A8A7B] rounded-xl font-bold text-sm hover:bg-[#0A8A7B] hover:text-white transition-all"
+        >
+          치료사로 가입하기 →
+        </button>
+      </div>
     </main>
   )
 }
