@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import ConsultFormModal from '@/components/ConsultFormModal'
@@ -16,7 +16,7 @@ interface Therapist {
   kakao_link: string
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [therapists, setTherapists] = useState<Therapist[]>([])
@@ -116,5 +116,17 @@ export default function SearchPage() {
         purpose={purpose}
       />
     </main>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-md mx-auto min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-400">로딩 중...</p>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   )
 }
