@@ -15,15 +15,18 @@ const BODY_PARTS = [
 ]
 
 const PURPOSES = [
-  { label: '수술 후 재활', type: 'medical' },
-  { label: '만성 통증', type: 'medical' },
-  { label: '디스크', type: 'medical' },
-  { label: '스포츠 재활', type: 'both' },
-  { label: '체형교정', type: 'both' },
-  { label: '산후 재활', type: 'both' },
-  { label: '운동 지도', type: 'exercise' },
-  { label: '체력 강화', type: 'exercise' },
-  { label: '자세 교정', type: 'exercise' },
+  // 🏥 치료·재활
+  { label: '도수치료', type: 'medical' },
+  { label: '운동치료', type: 'medical' },
+  { label: '통증치료', type: 'medical' },
+  // 🏋️ 운동·교정
+  { label: '필라테스', type: 'exercise' },
+  { label: '1:1 PT', type: 'exercise' },
+  { label: '자세교정', type: 'exercise' },
+  // 🤰 특수 상황
+  { label: '산후 재활', type: 'special' },
+  { label: '스포츠 재활', type: 'special' },
+  { label: '수술 후 재활', type: 'special' },
 ]
 
 export default function Home() {
@@ -133,9 +136,9 @@ export default function Home() {
           </div>
 
           <div>
-            <p className="text-xs text-gray-400 mb-2 font-semibold">🔄 치료 + 운동</p>
+            <p className="text-xs text-gray-400 mb-2 font-semibold">🤰 특수 상황</p>
             <div className="flex flex-wrap gap-2">
-              {PURPOSES.filter(p => p.type === 'both').map((purpose) => (
+              {PURPOSES.filter(p => p.type === 'special').map((purpose) => (
                 <button
                   key={purpose.label}
                   onClick={() => setSelectedPurpose(selectedPurpose === purpose.label ? null : purpose.label)}
