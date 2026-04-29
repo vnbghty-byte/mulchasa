@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const BODY_PARTS = [
@@ -31,9 +31,27 @@ const PURPOSES = [
 
 export default function Home() {
   const router = useRouter()
-  const [selectedPart, setSelectedPart] = useState<string | null>(null)
+const [selectedPart, setSelectedPart] = useState<string | null>(null)
   const [selectedPurpose, setSelectedPurpose] = useState<string | null>(null)
+  const [userLat, setUserLat] = useState<number | null>(null)
+  const [userLng, setUserLng] = useState<number | null>(null)
+  const [locationStatus, setLocationStatus] = useState<string>('위치를 불러오는 중...')
 
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLat(position.coords.latitude)
+          setUserLng(position.coords.longitude)
+          setLocationStatus('내 주변 검색 가능')
+        },
+        () => {
+          setLocationStatus('위치 정보를 사용할 수 없습니다')
+        },
+        { timeout: 5000 }
+      )
+    }
+  }, [])
   const purposeObj = PURPOSES.find(p => p.label === selectedPurpose)
   const searchLabel = !selectedPart
     ? '부위를 선택해주세요'
@@ -48,6 +66,8 @@ export default function Home() {
     const params = new URLSearchParams()
     params.set('part', selectedPart)
     if (selectedPurpose) params.set('purpose', selectedPurpose)
+    if (userLat) params.set('lat', userLat.toString())
+    if (userLng) params.set('lng', userLng.toString())
     router.push(`/search?${params.toString()}`)
   }
 
@@ -55,7 +75,7 @@ export default function Home() {
     <main className="max-w-md mx-auto min-h-screen bg-white">
       <div className="px-5 pt-4 pb-2 flex items-center gap-2 text-sm text-gray-400">
         <span>📍</span>
-        <span>위치를 불러오는 중...</span>
+        <span>{locationStatus}</span>
       </div>
 
       <div className="text-center px-5 pt-8 pb-10">
