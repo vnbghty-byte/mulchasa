@@ -399,7 +399,7 @@ export default function BrandingTestPage() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   // 분기 적용
-  const target = selections[1]?.[0];
+  const target = selections[100]?.[0];
   const branch = target === "B2B" ? "B2B" : "B2C";
 
   const filteredQuestions = QUESTIONS.filter((q) => {
