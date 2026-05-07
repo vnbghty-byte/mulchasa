@@ -13,11 +13,8 @@ const PRACTITIONER_TYPES = [
 const BODY_PART_OPTIONS = ['목', '어깨', '허리', '무릎', '손목', '발목', '골반']
 
 const PURPOSE_OPTIONS = [
-  // 🏥 치료·재활
   '도수치료', '운동치료', '통증치료',
-  // 🏋️ 운동·교정
   '필라테스', '1:1 PT', '자세교정',
-  // 🤰 특수 상황
   '산후 재활', '스포츠 재활', '수술 후 재활',
 ]
 
@@ -32,6 +29,10 @@ export default function RegisterPage() {
   const [practitionerType, setPractitionerType] = useState('')
   const [hospitalName, setHospitalName] = useState('')
   const [studioName, setStudioName] = useState('')
+  const [address, setAddress] = useState('')
+  const [addressResult, setAddressResult] = useState<{ latitude: number; longitude: number; address: string } | null>(null)
+  const [addressLoading, setAddressLoading] = useState(false)
+  const [addressError, setAddressError] = useState('')
   const [phone, setPhone] = useState('')
   const [kakaoLink, setKakaoLink] = useState('')
   const [intro, setIntro] = useState('')
@@ -48,6 +49,26 @@ export default function RegisterPage() {
     setSelectedPurposes(prev =>
       prev.includes(purpose) ? prev.filter(p => p !== purpose) : [...prev, purpose]
     )
+  }
+
+  const handleAddressSearch = async () => {
+    if (!address.trim()) return
+    setAddressLoading(true)
+    setAddressError('')
+    setAddressResult(null)
+    try {
+      const res = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`)
+      const data = await res.json()
+      if (res.ok) {
+        setAddressResult(data)
+      } else {
+        setAddressError('주소를 찾을 수 없습니다. 더 자세히 입력해보세요.')
+      }
+    } catch {
+      setAddressError('주소 검색 중 오류가 발생했습니다.')
+    } finally {
+      setAddressLoading(false)
+    }
   }
 
   const canProceedStep1 = name.trim() && licenseNumber.trim() && phone.trim()
@@ -71,6 +92,8 @@ export default function RegisterPage() {
           kakao_link: kakaoLink,
           intro,
           verification_status: 'pending',
+          latitude: addressResult?.latitude || null,
+          longitude: addressResult?.longitude || null,
         })
         .select()
         .single()
@@ -133,52 +156,21 @@ export default function RegisterPage() {
           <div className="space-y-5">
             <div>
               <label className="text-sm font-bold text-gray-700 block mb-2">이름 *</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="실명 입력"
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-              />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="실명 입력" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
             </div>
-
             <div>
               <label className="text-sm font-bold text-gray-700 block mb-2">물리치료사 면허번호 *</label>
-              <input
-                type="text"
-                value={licenseNumber}
-                onChange={(e) => setLicenseNumber(e.target.value)}
-                placeholder="예: 12345"
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-              />
-              <p className="text-xs text-gray-400 mt-2">
-                🛡️ 보건복지부에 등록된 면허번호로 24시간 내 인증됩니다
-              </p>
+              <input type="text" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="예: 12345" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
+              <p className="text-xs text-gray-400 mt-2">🛡️ 보건복지부에 등록된 면허번호로 24시간 내 인증됩니다</p>
             </div>
-
             <div>
               <label className="text-sm font-bold text-gray-700 block mb-2">경력 (년) *</label>
-              <input
-                type="number"
-                value={yearsExperience}
-                onChange={(e) => setYearsExperience(Number(e.target.value))}
-                min="0"
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-              />
+              <input type="number" value={yearsExperience} onChange={(e) => setYearsExperience(Number(e.target.value))} min="0" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
             </div>
-
             <div>
               <label className="text-sm font-bold text-gray-700 block mb-2">연락처 *</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="010-0000-0000"
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-              />
-              <p className="text-xs text-gray-400 mt-2">
-                * 환자에게 노출되지 않으며, 인증 결과 안내용으로만 사용됩니다
-              </p>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="010-0000-0000" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
+              <p className="text-xs text-gray-400 mt-2">* 환자에게 노출되지 않으며, 인증 결과 안내용으로만 사용됩니다</p>
             </div>
           </div>
         )}
@@ -189,20 +181,10 @@ export default function RegisterPage() {
               <label className="text-sm font-bold text-gray-700 block mb-3">활동 유형 *</label>
               <div className="space-y-2">
                 {PRACTITIONER_TYPES.map(type => (
-                  <button
-                    key={type.value}
-                    onClick={() => setPractitionerType(type.value)}
-                    className={
-                      'w-full p-4 rounded-xl text-left transition-all ' +
-                      (practitionerType === type.value
-                        ? 'bg-[#0A8A7B] text-white'
-                        : 'bg-gray-50 text-gray-700 border border-gray-100')
-                    }
-                  >
+                  <button key={type.value} onClick={() => setPractitionerType(type.value)}
+                    className={'w-full p-4 rounded-xl text-left transition-all ' + (practitionerType === type.value ? 'bg-[#0A8A7B] text-white' : 'bg-gray-50 text-gray-700 border border-gray-100')}>
                     <div className="font-bold mb-1">{type.label}</div>
-                    <div className={`text-xs ${practitionerType === type.value ? 'text-white/80' : 'text-gray-400'}`}>
-                      {type.desc}
-                    </div>
+                    <div className={`text-xs ${practitionerType === type.value ? 'text-white/80' : 'text-gray-400'}`}>{type.desc}</div>
                   </button>
                 ))}
               </div>
@@ -211,71 +193,79 @@ export default function RegisterPage() {
             {(practitionerType === 'hospital_pt' || practitionerType === 'both') && (
               <div>
                 <label className="text-sm font-bold text-gray-700 block mb-2">소속 병원·의원 *</label>
-                <input
-                  type="text"
-                  value={hospitalName}
-                  onChange={(e) => setHospitalName(e.target.value)}
-                  placeholder="예: 강남재활의학과"
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-                />
+                <input type="text" value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} placeholder="예: 강남재활의학과" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
               </div>
             )}
 
             {(practitionerType === 'exercise_specialist' || practitionerType === 'both') && (
               <div>
                 <label className="text-sm font-bold text-gray-700 block mb-2">스튜디오·센터명 *</label>
-                <input
-                  type="text"
-                  value={studioName}
-                  onChange={(e) => setStudioName(e.target.value)}
-                  placeholder="예: 바디밸런스 필라테스"
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-                />
+                <input type="text" value={studioName} onChange={(e) => setStudioName(e.target.value)} placeholder="예: 바디밸런스 필라테스" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
               </div>
             )}
+
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-2">소속 주소</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => { setAddress(e.target.value); setAddressResult(null) }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddressSearch()}
+                  placeholder="예: 서울시 강남구 테헤란로 123"
+                  className="flex-1 p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
+                />
+                <button
+                  onClick={handleAddressSearch}
+                  disabled={addressLoading || !address.trim()}
+                  className="px-4 py-3 bg-[#0A8A7B] text-white rounded-xl text-sm font-bold shrink-0 disabled:bg-gray-200 disabled:text-gray-400"
+                >
+                  {addressLoading ? '검색 중' : '검색'}
+                </button>
+              </div>
+
+              {addressResult && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                  <p className="text-xs font-bold text-green-700 mb-1">✅ 위치 확인됨</p>
+                  <p className="text-xs text-green-600">{addressResult.address}</p>
+                  <p className="text-xs text-green-500 mt-1">
+                    위도 {addressResult.latitude.toFixed(4)} / 경도 {addressResult.longitude.toFixed(4)}
+                  </p>
+                </div>
+              )}
+
+              {addressError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                  <p className="text-xs text-red-600">{addressError}</p>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-400 mt-2">
+                📍 입력하면 환자에게 거리 기반 검색 결과에 노출됩니다 (선택사항)
+              </p>
+            </div>
           </div>
         )}
 
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-bold text-gray-700 block mb-3">
-                전문 부위 * <span className="text-xs text-gray-400 font-normal">(복수 선택)</span>
-              </label>
+              <label className="text-sm font-bold text-gray-700 block mb-3">전문 부위 * <span className="text-xs text-gray-400 font-normal">(복수 선택)</span></label>
               <div className="flex flex-wrap gap-2">
                 {BODY_PART_OPTIONS.map(part => (
-                  <button
-                    key={part}
-                    onClick={() => toggleBodyPart(part)}
-                    className={
-                      'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' +
-                      (selectedBodyParts.includes(part)
-                        ? 'bg-[#0A8A7B] text-white'
-                        : 'bg-gray-50 text-gray-500 border border-gray-100')
-                    }
-                  >
+                  <button key={part} onClick={() => toggleBodyPart(part)}
+                    className={'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' + (selectedBodyParts.includes(part) ? 'bg-[#0A8A7B] text-white' : 'bg-gray-50 text-gray-500 border border-gray-100')}>
                     {part}
                   </button>
                 ))}
               </div>
             </div>
-
             <div>
-              <label className="text-sm font-bold text-gray-700 block mb-3">
-                전문 분야 * <span className="text-xs text-gray-400 font-normal">(복수 선택)</span>
-              </label>
+              <label className="text-sm font-bold text-gray-700 block mb-3">전문 분야 * <span className="text-xs text-gray-400 font-normal">(복수 선택)</span></label>
               <div className="flex flex-wrap gap-2">
                 {PURPOSE_OPTIONS.map(purpose => (
-                  <button
-                    key={purpose}
-                    onClick={() => togglePurpose(purpose)}
-                    className={
-                      'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' +
-                      (selectedPurposes.includes(purpose)
-                        ? 'bg-[#0A8A7B] text-white'
-                        : 'bg-gray-50 text-gray-500 border border-gray-100')
-                    }
-                  >
+                  <button key={purpose} onClick={() => togglePurpose(purpose)}
+                    className={'px-4 py-2.5 rounded-full text-sm font-semibold transition-all ' + (selectedPurposes.includes(purpose) ? 'bg-[#0A8A7B] text-white' : 'bg-gray-50 text-gray-500 border border-gray-100')}>
                     {purpose}
                   </button>
                 ))}
@@ -288,32 +278,13 @@ export default function RegisterPage() {
           <div className="space-y-5">
             <div>
               <label className="text-sm font-bold text-gray-700 block mb-2">카카오톡 오픈채팅 링크 *</label>
-              <input
-                type="text"
-                value={kakaoLink}
-                onChange={(e) => setKakaoLink(e.target.value)}
-                placeholder="https://open.kakao.com/o/..."
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
-              />
-              <p className="text-xs text-gray-400 mt-2">
-                환자가 상담 요청 시 이 링크로 연결됩니다
-              </p>
+              <input type="text" value={kakaoLink} onChange={(e) => setKakaoLink(e.target.value)} placeholder="https://open.kakao.com/o/..." className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]" />
+              <p className="text-xs text-gray-400 mt-2">환자가 상담 요청 시 이 링크로 연결됩니다</p>
             </div>
-
             <div>
-              <label className="text-sm font-bold text-gray-700 block mb-2">
-                자기소개 * <span className="text-xs text-gray-400 font-normal">(최소 30자)</span>
-              </label>
-              <textarea
-                value={intro}
-                onChange={(e) => setIntro(e.target.value)}
-                placeholder="환자에게 보여질 자기소개를 작성해주세요. 전문 분야, 치료 철학, 경력 등을 간단히 적어주시면 좋습니다."
-                rows={6}
-                className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B] resize-none"
-              />
-              <p className="text-xs text-gray-400 mt-2 text-right">
-                {intro.length} / 최소 30자
-              </p>
+              <label className="text-sm font-bold text-gray-700 block mb-2">자기소개 * <span className="text-xs text-gray-400 font-normal">(최소 30자)</span></label>
+              <textarea value={intro} onChange={(e) => setIntro(e.target.value)} placeholder="환자에게 보여질 자기소개를 작성해주세요." rows={6} className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B] resize-none" />
+              <p className="text-xs text-gray-400 mt-2 text-right">{intro.length} / 최소 30자</p>
             </div>
           </div>
         )}
@@ -335,12 +306,7 @@ export default function RegisterPage() {
                 <li>활성화 후 검색 결과에 노출됩니다</li>
               </ol>
             </div>
-            <button
-              onClick={() => router.push('/')}
-              className="px-8 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold"
-            >
-              홈으로
-            </button>
+            <button onClick={() => router.push('/')} className="px-8 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold">홈으로</button>
           </div>
         )}
       </div>
@@ -350,19 +316,8 @@ export default function RegisterPage() {
           {step < 4 ? (
             <button
               onClick={() => setStep(step + 1)}
-              disabled={
-                (step === 1 && !canProceedStep1) ||
-                (step === 2 && !canProceedStep2) ||
-                (step === 3 && !canProceedStep3)
-              }
-              className={
-                'w-full py-4 rounded-2xl text-base font-bold transition-all ' +
-                (((step === 1 && canProceedStep1) ||
-                  (step === 2 && canProceedStep2) ||
-                  (step === 3 && canProceedStep3))
-                  ? 'bg-[#0A8A7B] text-white active:scale-[0.98]'
-                  : 'bg-gray-100 text-gray-300 cursor-not-allowed')
-              }
+              disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2) || (step === 3 && !canProceedStep3)}
+              className={'w-full py-4 rounded-2xl text-base font-bold transition-all ' + (((step === 1 && canProceedStep1) || (step === 2 && canProceedStep2) || (step === 3 && canProceedStep3)) ? 'bg-[#0A8A7B] text-white active:scale-[0.98]' : 'bg-gray-100 text-gray-300 cursor-not-allowed')}
             >
               다음
             </button>
@@ -370,12 +325,7 @@ export default function RegisterPage() {
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || submitting}
-              className={
-                'w-full py-4 rounded-2xl text-base font-bold transition-all ' +
-                (canSubmit && !submitting
-                  ? 'bg-[#0A8A7B] text-white active:scale-[0.98]'
-                  : 'bg-gray-100 text-gray-300 cursor-not-allowed')
-              }
+              className={'w-full py-4 rounded-2xl text-base font-bold transition-all ' + (canSubmit && !submitting ? 'bg-[#0A8A7B] text-white active:scale-[0.98]' : 'bg-gray-100 text-gray-300 cursor-not-allowed')}
             >
               {submitting ? '신청 중...' : '가입 신청하기'}
             </button>
