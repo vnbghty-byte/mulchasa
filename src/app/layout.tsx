@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: '물찾사',
   },
   icons: {
-    icon: '/icons/icon-192.png',
+    icon: '/icons/icon_192.png',
     apple: '/icons/apple-touch-icon.png',
   },
 }
