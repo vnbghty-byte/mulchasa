@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: '물찾사',
   },
   icons: {
-    icon: '/icons/icon_192.png',
+    icon: '/icons/icon-192.png',
     apple: '/icons/apple-touch-icon.png',
   },
 }
@@ -33,7 +33,7 @@ export default function RootLayout({
     <html lang="ko">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="물찾사" />
