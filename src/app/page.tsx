@@ -207,9 +207,15 @@ const [selectedPart, setSelectedPart] = useState<string | null>(null)
         </p>
         <button
           onClick={() => router.push('/register')}
-          className="w-full py-3 bg-white border border-[#0A8A7B] text-[#0A8A7B] rounded-xl font-bold text-sm hover:bg-[#0A8A7B] hover:text-white transition-all"
+          className="w-full py-3 bg-white border border-[#0A8A7B] text-[#0A8A7B] rounded-xl font-bold text-sm hover:bg-[#0A8A7B] hover:text-white transition-all mb-2"
         >
           치료사로 가입하기 →
+        </button>
+        <button
+          onClick={() => router.push('/mypage')}
+          className="w-full py-3 bg-transparent text-gray-400 rounded-xl font-semibold text-sm"
+        >
+          이미 가입하셨나요? 프로필 수정 →
         </button>
       </div>
     </main>
