@@ -24,13 +24,36 @@ interface Tag {
   label: string
 }
 
+interface Review {
+  id: string
+  nickname: string
+  rating: number
+  content: string
+  created_at: string
+}
+
 export default function TherapistDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [therapist, setTherapist] = useState<Therapist | null>(null)
   const [tags, setTags] = useState<Tag[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [nickname, setNickname] = useState('')
+  const [rating, setRating] = useState(5)
+  const [content, setContent] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const fetchReviews = async (therapistId: string) => {
+    const { data } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('therapist_id', therapistId)
+      .order('created_at', { ascending: false })
+    setReviews(data || [])
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -44,11 +67,7 @@ export default function TherapistDetailPage() {
         .eq('verification_status', 'verified')
         .single()
 
-      if (!tData) {
-        setLoading(false)
-        return
-      }
-
+      if (!tData) { setLoading(false); return }
       setTherapist(tData)
 
       const { data: ttData } = await supabase
@@ -65,10 +84,36 @@ export default function TherapistDetailPage() {
         setTags(tagData || [])
       }
 
+      await fetchReviews(id)
       setLoading(false)
     }
     fetchData()
   }, [params.id])
+
+  const handleSubmitReview = async () => {
+    if (!therapist || !nickname.trim() || content.trim().length < 10) return
+    setSubmitting(true)
+
+    const { error } = await supabase.from('reviews').insert({
+      therapist_id: therapist.id,
+      nickname: nickname.trim(),
+      rating,
+      content: content.trim(),
+    })
+
+    if (!error) {
+      await fetchReviews(therapist.id)
+      setNickname('')
+      setRating(5)
+      setContent('')
+      setShowReviewForm(false)
+    }
+    setSubmitting(false)
+  }
+
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : null
 
   const getTypeInfo = (type: string) => {
     if (type === 'hospital_pt') return { label: '병원 물리치료사', emoji: '🏥', color: 'bg-blue-50 text-blue-700' }
@@ -91,7 +136,6 @@ export default function TherapistDetailPage() {
         <div className="text-center">
           <div className="text-5xl mb-4">😔</div>
           <p className="text-base font-bold text-gray-700 mb-2">치료사를 찾을 수 없습니다</p>
-          <p className="text-sm text-gray-400 mb-6">삭제되었거나 인증되지 않은 프로필입니다</p>
           <button onClick={() => router.push('/')} className="px-6 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold">홈으로</button>
         </div>
       </main>
@@ -114,10 +158,16 @@ export default function TherapistDetailPage() {
           <div>
             <h2 className="text-2xl font-extrabold text-gray-900">{therapist.name}</h2>
             <p className="text-sm text-gray-500 mt-1">경력 {therapist.years_experience}년</p>
+            {averageRating && (
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-yellow-400 text-sm">{'⭐'.repeat(Math.round(Number(averageRating)))}</span>
+                <span className="text-sm font-bold text-gray-700">{averageRating}</span>
+                <span className="text-xs text-gray-400">({reviews.length}개 후기)</span>
+              </div>
+            )}
           </div>
           <span className="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">✓ 면허 인증</span>
         </div>
-
         <div className={'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ' + typeInfo.color}>
           <span>{typeInfo.emoji}</span>
           <span>{typeInfo.label}</span>
@@ -138,9 +188,6 @@ export default function TherapistDetailPage() {
             <span className="text-sm text-gray-700">{therapist.studio_name}</span>
           </div>
         )}
-        {!therapist.hospital_name && !therapist.studio_name && (
-          <p className="text-sm text-gray-400">소속 정보 없음</p>
-        )}
       </div>
 
       {bodyParts.length > 0 && (
@@ -148,9 +195,7 @@ export default function TherapistDetailPage() {
           <h3 className="text-sm font-bold text-gray-900 mb-3">🦴 전문 부위</h3>
           <div className="flex flex-wrap gap-2">
             {bodyParts.map(tag => (
-              <span key={tag.label} className="px-3 py-1.5 bg-[#E8F6F4] text-[#0A8A7B] text-sm font-semibold rounded-full">
-                {tag.label}
-              </span>
+              <span key={tag.label} className="px-3 py-1.5 bg-[#E8F6F4] text-[#0A8A7B] text-sm font-semibold rounded-full">{tag.label}</span>
             ))}
           </div>
         </div>
@@ -161,9 +206,7 @@ export default function TherapistDetailPage() {
           <h3 className="text-sm font-bold text-gray-900 mb-3">🎯 전문 분야</h3>
           <div className="flex flex-wrap gap-2">
             {purposes.map(tag => (
-              <span key={tag.label} className="px-3 py-1.5 bg-violet-50 text-violet-600 text-sm font-semibold rounded-full">
-                {tag.label}
-              </span>
+              <span key={tag.label} className="px-3 py-1.5 bg-violet-50 text-violet-600 text-sm font-semibold rounded-full">{tag.label}</span>
             ))}
           </div>
         </div>
@@ -172,6 +215,101 @@ export default function TherapistDetailPage() {
       <div className="bg-white px-5 py-5 mb-2">
         <h3 className="text-sm font-bold text-gray-900 mb-3">💬 자기소개</h3>
         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{therapist.intro}</p>
+      </div>
+
+      <div className="bg-white px-5 py-5 mb-2">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900">⭐ 후기</h3>
+            {averageRating && (
+              <p className="text-xs text-gray-400 mt-0.5">평균 {averageRating}점 · {reviews.length}개</p>
+            )}
+          </div>
+          <button
+            onClick={() => setShowReviewForm(!showReviewForm)}
+            className="px-4 py-2 bg-[#0A8A7B] text-white rounded-xl text-xs font-bold"
+          >
+            {showReviewForm ? '취소' : '후기 작성'}
+          </button>
+        </div>
+
+        {showReviewForm && (
+          <div className="bg-gray-50 rounded-2xl p-4 mb-4 space-y-3">
+            <div>
+              <label className="text-xs font-bold text-gray-600 block mb-1.5">닉네임</label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="닉네임 입력"
+                maxLength={20}
+                className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B]"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-600 block mb-1.5">별점</label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className="text-2xl transition-all"
+                  >
+                    {star <= rating ? '⭐' : '✩'}
+                  </button>
+                ))}
+                <span className="text-sm text-gray-500 ml-1 self-center">{rating}점</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-gray-600 block mb-1.5">
+                후기 내용 <span className="text-gray-400 font-normal">(최소 10자)</span>
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="치료 경험을 자유롭게 작성해주세요"
+                rows={4}
+                className="w-full p-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#0A8A7B] resize-none"
+              />
+              <p className="text-xs text-gray-400 text-right mt-1">{content.length}자</p>
+            </div>
+
+            <button
+              onClick={handleSubmitReview}
+              disabled={submitting || !nickname.trim() || content.trim().length < 10}
+              className={'w-full py-3 rounded-xl font-bold text-sm transition-all ' + (!submitting && nickname.trim() && content.trim().length >= 10 ? 'bg-[#0A8A7B] text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed')}
+            >
+              {submitting ? '등록 중...' : '후기 등록'}
+            </button>
+          </div>
+        )}
+
+        {reviews.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-400 text-sm">아직 후기가 없습니다</p>
+            <p className="text-gray-300 text-xs mt-1">첫 번째 후기를 남겨보세요!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {reviews.map(review => (
+              <div key={review.id} className="border border-gray-100 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-gray-800">{review.nickname}</span>
+                    <span className="text-yellow-400 text-xs">{'⭐'.repeat(review.rating)}</span>
+                  </div>
+                  <span className="text-xs text-gray-300">
+                    {new Date(review.created_at).toLocaleDateString('ko-KR')}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed">{review.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-5 py-4 bg-white border-t border-gray-100 z-20">
