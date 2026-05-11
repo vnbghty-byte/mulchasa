@@ -17,6 +17,8 @@ interface Therapist {
   kakao_link: string
   intro: string
   verification_status: string
+  profile_image_url: string | null
+  certifications: string[] | null
 }
 
 interface Tag {
@@ -154,10 +156,28 @@ export default function TherapistDetailPage() {
       </div>
 
       <div className="bg-white px-5 py-6 mb-2">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-extrabold text-gray-900">{therapist.name}</h2>
-            <p className="text-sm text-gray-500 mt-1">경력 {therapist.years_experience}년</p>
+        <div className="flex items-start gap-5 mb-4">
+          <div className="shrink-0" style={{width: 96, height: 96, marginRight: 20}}>
+            {therapist.profile_image_url ? (
+              <img
+                src={therapist.profile_image_url}
+                alt={therapist.name}
+                style={{width: 96, height: 96, borderRadius: '50%', objectFit: 'cover'}}
+              />
+            ) : (
+              <div style={{width: 96, height: 96, borderRadius: '50%'}} className="bg-gray-100 flex items-center justify-center">
+                <span className="text-3xl">👤</span>
+              </div>
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-2xl font-extrabold text-gray-900">{therapist.name}</h2>
+                <p className="text-sm text-gray-500 mt-0.5">경력 {therapist.years_experience}년</p>
+              </div>
+              <span className="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full shrink-0">✓ 면허 인증</span>
+            </div>
             {averageRating && (
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-yellow-400 text-sm">{'⭐'.repeat(Math.round(Number(averageRating)))}</span>
@@ -166,7 +186,6 @@ export default function TherapistDetailPage() {
               </div>
             )}
           </div>
-          <span className="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">✓ 면허 인증</span>
         </div>
         <div className={'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ' + typeInfo.color}>
           <span>{typeInfo.emoji}</span>
@@ -211,7 +230,18 @@ export default function TherapistDetailPage() {
           </div>
         </div>
       )}
-
+{therapist.certifications && therapist.certifications.length > 0 && (
+        <div className="bg-white px-5 py-5 mb-2">
+          <h3 className="text-sm font-bold text-gray-900 mb-3">🏅 자격증</h3>
+          <div className="flex flex-wrap gap-2">
+            {therapist.certifications.map(cert => (
+              <span key={cert} className="px-3 py-1.5 bg-yellow-50 text-yellow-700 text-xs font-semibold rounded-full border border-yellow-100">
+                ✓ {cert}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="bg-white px-5 py-5 mb-2">
         <h3 className="text-sm font-bold text-gray-900 mb-3">💬 자기소개</h3>
         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{therapist.intro}</p>
