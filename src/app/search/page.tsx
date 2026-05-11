@@ -18,6 +18,7 @@ interface Therapist {
   latitude: number | null
   longitude: number | null
   distance?: number | null
+  profile_image_url: string | null
 }
 
 function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -231,23 +232,43 @@ function SearchContent() {
           {filtered.map((t) => (
             <div key={t.id} className="border border-gray-100 rounded-2xl p-5">
               <div className="cursor-pointer" onClick={() => router.push('/therapist/' + t.id)}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{t.name}</h3>
-                    <p className="text-sm text-gray-500">경력 {t.years_experience}년</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {t.practitioner_type === 'hospital_pt' && '🏥 병원 물리치료사'}
-                      {t.practitioner_type === 'exercise_specialist' && '🏋️ 움직임 전문가'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">면허 인증</span>
-                    {t.distance !== null && t.distance !== undefined && (
-                      <span className="text-xs text-[#0A8A7B] font-bold">📍 {formatDistance(t.distance)}</span>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="shrink-0" style={{width: 56, height: 56}}>
+                    {t.profile_image_url ? (
+                      <img
+                        src={t.profile_image_url}
+                        alt={t.name}
+                        style={{width: 56, height: 56, borderRadius: '50%', objectFit: 'cover'}}
+                      />
+                    ) : (
+                      <div style={{width: 56, height: 56, borderRadius: '50%'}} className="bg-gray-200 flex items-center justify-center">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="8" r="4" fill="#9CA3AF"/>
+                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      </div>
                     )}
                   </div>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900">{t.name}</h3>
+                        <p className="text-xs text-gray-500">경력 {t.years_experience}년</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {t.practitioner_type === 'hospital_pt' && '🏥 병원 물리치료사'}
+                          {t.practitioner_type === 'exercise_specialist' && '🏋️ 움직임 전문가'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">면허 인증</span>
+                        {t.distance !== null && t.distance !== undefined && (
+                          <span className="text-xs text-[#0A8A7B] font-bold">📍 {formatDistance(t.distance)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">{t.hospital_name || t.studio_name}</p>
+                <p className="text-sm text-gray-600 mb-2">{t.hospital_name || t.studio_name}</p>
                 <p className="text-sm text-gray-700 mb-3">{t.intro}</p>
                 <p className="text-xs text-[#0A8A7B] font-semibold mb-3 text-right">프로필 상세보기 →</p>
               </div>

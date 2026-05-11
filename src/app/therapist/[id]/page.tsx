@@ -165,8 +165,11 @@ export default function TherapistDetailPage() {
                 style={{width: 96, height: 96, borderRadius: '50%', objectFit: 'cover'}}
               />
             ) : (
-              <div style={{width: 96, height: 96, borderRadius: '50%'}} className="bg-gray-100 flex items-center justify-center">
-                <span className="text-3xl">👤</span>
+              <div style={{width: 96, height: 96, borderRadius: '50%'}} className="bg-gray-200 flex items-center justify-center">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="8" r="4" fill="#9CA3AF"/>
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </div>
             )}
           </div>
