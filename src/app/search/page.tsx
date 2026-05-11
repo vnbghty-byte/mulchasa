@@ -11,6 +11,7 @@ interface Therapist {
   hospital_name: string | null
   studio_name: string | null
   years_experience: number
+  practitioner_type: string
   intro: string
   phone: string
   kakao_link: string
@@ -36,12 +37,29 @@ function formatDistance(km: number): string {
   return `${Math.round(km)}km`
 }
 
+const EXPERIENCE_FILTERS = [
+  { label: '전체', min: 0 },
+  { label: '3년+', min: 3 },
+  { label: '5년+', min: 5 },
+  { label: '10년+', min: 10 },
+]
+
+const TYPE_FILTERS = [
+  { label: '전체', value: 'all' },
+  { label: '🏥 병원 물리치료사', value: 'hospital_pt' },
+  { label: '🏋️ 움직임 전문가', value: 'exercise_specialist' },
+]
+
 function SearchContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [therapists, setTherapists] = useState<Therapist[]>([])
+  const [filtered, setFiltered] = useState<Therapist[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null)
+  const [expFilter, setExpFilter] = useState(0)
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
 
   const bodyPart = searchParams.get('part')
   const purpose = searchParams.get('purpose')
@@ -112,6 +130,24 @@ function SearchContent() {
     fetchTherapists()
   }, [bodyPart, purpose, userLat, userLng, hasLocation])
 
+  useEffect(() => {
+    let result = [...therapists]
+    if (expFilter > 0) {
+      result = result.filter(t => t.years_experience >= expFilter)
+    }
+    if (typeFilter !== 'all') {
+      result = result.filter(t => t.practitioner_type === typeFilter)
+    }
+    setFiltered(result)
+  }, [therapists, expFilter, typeFilter])
+
+  const isFilterActive = expFilter > 0 || typeFilter !== 'all'
+
+  const resetFilters = () => {
+    setExpFilter(0)
+    setTypeFilter('all')
+  }
+
   if (loading) {
     return <div className="max-w-md mx-auto min-h-screen bg-white flex items-center justify-center"><p className="text-gray-400">치료사를 찾고 있습니다...</p></div>
   }
@@ -121,30 +157,88 @@ function SearchContent() {
       <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center gap-3 z-10">
         <button onClick={() => router.back()} className="text-gray-600 text-xl">←</button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-gray-900">{bodyPart} 전문가 {therapists.length}명</h1>
+          <h1 className="text-lg font-bold text-gray-900">{bodyPart} 전문가 {filtered.length}명</h1>
           {purpose && <p className="text-sm text-gray-400">{purpose}</p>}
         </div>
-        <span className="text-xs text-gray-400">
-          {hasLocation ? '📍 거리순' : '⭐ 경력순'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">{hasLocation ? '📍 거리순' : '⭐ 경력순'}</span>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={'px-3 py-1.5 rounded-full text-xs font-bold transition-all ' + (isFilterActive ? 'bg-[#0A8A7B] text-white' : 'bg-gray-100 text-gray-600')}
+          >
+            필터 {isFilterActive ? '●' : ''}
+          </button>
+        </div>
       </div>
 
-      {therapists.length === 0 ? (
+      {showFilters && (
+        <div className="bg-gray-50 px-5 py-4 border-b border-gray-100">
+          <div className="mb-3">
+            <p className="text-xs font-bold text-gray-500 mb-2">경력</p>
+            <div className="flex gap-2 flex-wrap">
+              {EXPERIENCE_FILTERS.map(f => (
+                <button
+                  key={f.min}
+                  onClick={() => setExpFilter(f.min)}
+                  className={'px-3 py-1.5 rounded-full text-xs font-semibold transition-all ' + (expFilter === f.min ? 'bg-[#0A8A7B] text-white' : 'bg-white text-gray-600 border border-gray-200')}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <p className="text-xs font-bold text-gray-500 mb-2">활동 유형</p>
+            <div className="flex gap-2 flex-wrap">
+              {TYPE_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => setTypeFilter(f.value)}
+                  className={'px-3 py-1.5 rounded-full text-xs font-semibold transition-all ' + (typeFilter === f.value ? 'bg-[#0A8A7B] text-white' : 'bg-white text-gray-600 border border-gray-200')}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {isFilterActive && (
+            <button onClick={resetFilters} className="text-xs text-red-400 font-semibold">
+              ✕ 필터 초기화
+            </button>
+          )}
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
         <div className="px-5 py-20 text-center">
           <div className="text-5xl mb-4">🔍</div>
-          <p className="text-base font-bold text-gray-700 mb-2">조건에 맞는 전문가가 없습니다</p>
-          <p className="text-sm text-gray-400 mb-6">부위나 목적을 다시 선택해보세요</p>
-          <button onClick={() => router.push('/')} className="px-6 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold">다시 검색하기</button>
+          <p className="text-base font-bold text-gray-700 mb-2">
+            {isFilterActive ? '필터 조건에 맞는 전문가가 없습니다' : '조건에 맞는 전문가가 없습니다'}
+          </p>
+          <p className="text-sm text-gray-400 mb-6">
+            {isFilterActive ? '필터를 조정해보세요' : '부위나 목적을 다시 선택해보세요'}
+          </p>
+          {isFilterActive ? (
+            <button onClick={resetFilters} className="px-6 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold">필터 초기화</button>
+          ) : (
+            <button onClick={() => router.push('/')} className="px-6 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold">다시 검색하기</button>
+          )}
         </div>
       ) : (
         <div className="px-5 py-4 space-y-4">
-          {therapists.map((t) => (
+          {filtered.map((t) => (
             <div key={t.id} className="border border-gray-100 rounded-2xl p-5">
               <div className="cursor-pointer" onClick={() => router.push('/therapist/' + t.id)}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">{t.name}</h3>
                     <p className="text-sm text-gray-500">경력 {t.years_experience}년</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {t.practitioner_type === 'hospital_pt' && '🏥 병원 물리치료사'}
+                      {t.practitioner_type === 'exercise_specialist' && '🏋️ 움직임 전문가'}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">면허 인증</span>

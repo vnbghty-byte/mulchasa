@@ -84,9 +84,8 @@ export default function AdminPage() {
   }
 
   const getTypeLabel = (type: string) => {
-    if (type === 'hospital_pt') return '🏥 병원 PT'
-    if (type === 'exercise_specialist') return '🏋️ 운동전문가'
-    if (type === 'both') return '🔄 둘 다'
+    if (type === 'hospital_pt') return '🏥 병원 물리치료사'
+    if (type === 'exercise_specialist') return '🏋️ 움직임 전문가'
     return type
   }
 

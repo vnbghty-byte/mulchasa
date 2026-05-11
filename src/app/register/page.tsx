@@ -6,8 +6,7 @@ import { supabase } from '@/lib/supabase'
 
 const PRACTITIONER_TYPES = [
   { value: 'hospital_pt', label: '🏥 병원 물리치료사', desc: '병원·의원 소속' },
-  { value: 'exercise_specialist', label: '🏋️ 운동 전문가', desc: '필라테스·1:1 PT' },
-  { value: 'both', label: '🔄 둘 다', desc: '병원 근무 + 개인 활동' },
+  { value: 'exercise_specialist', label: '🏋️ 움직임 전문가', desc: '필라테스·1:1 PT' },
 ]
 
 const BODY_PART_OPTIONS = ['목', '어깨', '허리', '무릎', '손목', '발목', '골반']
