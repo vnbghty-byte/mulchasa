@@ -115,6 +115,14 @@ export default function Home() {
     router.push(qs ? `/symptom?${qs}` : '/symptom')
   }
 
+  const goMap = () => {
+    const params = new URLSearchParams()
+    params.set('view', 'map')
+    if (userLat) params.set('lat', userLat.toString())
+    if (userLng) params.set('lng', userLng.toString())
+    router.push(`/search?${params.toString()}`)
+  }
+
   if (stage === 'checking') {
     return <main className="max-w-md mx-auto min-h-screen bg-white" />
   }
@@ -204,7 +212,7 @@ export default function Home() {
           </svg>
         </button>
 
-        <button onClick={goSymptom} className="bg-white border border-gray-100 rounded-2xl p-4 relative text-left active:scale-[0.98] transition-all">
+        <button onClick={goMap} className="bg-white border border-gray-100 rounded-2xl p-4 relative text-left active:scale-[0.98] transition-all">
           <span className="inline-block text-[11px] px-2 py-0.5 rounded-md mb-1.5" style={{ background: '#FAECE7', color: '#993C1D' }}>내 주변</span>
           <div className="text-[15px] font-bold text-gray-900">지도로 찾기</div>
           <svg className="absolute right-2.5 bottom-2.5" width="30" height="30" viewBox="0 0 24 24" fill="none" style={{ color: '#F0997B' }}>
@@ -269,7 +277,7 @@ export default function Home() {
 
       <nav className="max-w-md mx-auto fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex py-2 px-0">
         <TabItem active label="홈" />
-        <TabItem label="내 주변" onClick={goSymptom} />
+        <TabItem label="내 주변" onClick={goMap} />
         <TabItem label="채팅" />
         <TabItem label="찜" />
         <TabItem label="내 정보" onClick={() => router.push('/mypage')} />

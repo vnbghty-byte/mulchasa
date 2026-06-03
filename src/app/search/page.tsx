@@ -326,34 +326,47 @@ function SearchContent() {
   const [expFilter, setExpFilter] = useState(0)
   const [typeFilter, setTypeFilter] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [viewMode, setViewMode] = useState<'list' | 'map'>(
+    searchParams.get('view') === 'map' ? 'map' : 'list'
+  )
 
   const bodyPart = searchParams.get('part')
   const purpose = searchParams.get('purpose')
   const userLat = searchParams.get('lat') ? Number(searchParams.get('lat')) : null
   const userLng = searchParams.get('lng') ? Number(searchParams.get('lng')) : null
+  // 부위/목적 없이 들어오면 전체 치료사 모드 (지도로 찾기)
+  const isAllMode = !bodyPart && !purpose
   const hasLocation = userLat !== null && userLng !== null
 
   useEffect(() => {
     async function fetchTherapists() {
       setLoading(true)
       const tagLabels = [bodyPart, purpose].filter(Boolean) as string[]
-      if (tagLabels.length === 0) { setTherapists([]); setLoading(false); return }
-
-      const { data: tagData } = await supabase.from('tags').select('id, label').in('label', tagLabels)
-      if (!tagData || tagData.length === 0) { setTherapists([]); setLoading(false); return }
-
-      const tagIds = tagData.map(t => t.id)
-      const { data: ttData } = await supabase.from('therapist_tags').select('therapist_id, tag_id').in('tag_id', tagIds)
-      if (!ttData || ttData.length === 0) { setTherapists([]); setLoading(false); return }
 
       let therapistIds: string[] = []
-      if (tagLabels.length === 2) {
-        const counts: Record<string, number> = {}
-        ttData.forEach(r => { counts[r.therapist_id] = (counts[r.therapist_id] || 0) + 1 })
-        therapistIds = Object.keys(counts).filter(id => counts[id] === 2)
+
+      if (tagLabels.length === 0) {
+        // 전체 모드 (지도로 찾기): 검증된 모든 치료사
+        const { data: allVerified } = await supabase
+          .from('therapists').select('id').eq('verification_status', 'verified')
+        if (!allVerified || allVerified.length === 0) { setTherapists([]); setLoading(false); return }
+        therapistIds = allVerified.map(t => t.id)
       } else {
-        therapistIds = Array.from(new Set(ttData.map(r => r.therapist_id)))
+        // 부위/목적 검색 모드
+        const { data: tagData } = await supabase.from('tags').select('id, label').in('label', tagLabels)
+        if (!tagData || tagData.length === 0) { setTherapists([]); setLoading(false); return }
+
+        const tagIds = tagData.map(t => t.id)
+        const { data: ttData } = await supabase.from('therapist_tags').select('therapist_id, tag_id').in('tag_id', tagIds)
+        if (!ttData || ttData.length === 0) { setTherapists([]); setLoading(false); return }
+
+        if (tagLabels.length === 2) {
+          const counts: Record<string, number> = {}
+          ttData.forEach(r => { counts[r.therapist_id] = (counts[r.therapist_id] || 0) + 1 })
+          therapistIds = Object.keys(counts).filter(id => counts[id] === 2)
+        } else {
+          therapistIds = Array.from(new Set(ttData.map(r => r.therapist_id)))
+        }
       }
 
       if (therapistIds.length === 0) { setTherapists([]); setLoading(false); return }
@@ -448,7 +461,9 @@ function SearchContent() {
       <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center gap-3 z-10">
         <button onClick={() => router.back()} className="text-gray-600 text-xl">←</button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-gray-900">{bodyPart} 전문가 {filtered.length}명</h1>
+          <h1 className="text-lg font-bold text-gray-900">
+            {isAllMode ? `내 주변 전문가 ${filtered.length}명` : `${bodyPart} 전문가 ${filtered.length}명`}
+          </h1>
           {purpose && <p className="text-sm text-gray-400">{purpose}</p>}
         </div>
         <div className="flex items-center gap-2">
