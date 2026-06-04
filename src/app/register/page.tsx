@@ -17,6 +17,20 @@ const PURPOSE_OPTIONS = [
   '산후 재활', '스포츠 재활', '수술 후 재활',
 ]
 
+const CERTIFICATION_OPTIONS = [
+  '물리치료사 면허',
+  '생활스포츠지도사 1급',
+  '생활스포츠지도사 2급',
+  '건강운동관리사',
+  '필라테스 지도자',
+  '요가 지도자',
+  'PNF',
+  '보바스',
+  'NSCA-CSCS',
+  'NASM-CPT',
+  'ACSM',
+]
+
 export default function RegisterPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
@@ -37,6 +51,7 @@ export default function RegisterPage() {
   const [intro, setIntro] = useState('')
   const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([])
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([])
+  const [selectedCerts, setSelectedCerts] = useState<string[]>([])
 
   const toggleBodyPart = (part: string) => {
     setSelectedBodyParts(prev =>
@@ -47,6 +62,12 @@ export default function RegisterPage() {
   const togglePurpose = (purpose: string) => {
     setSelectedPurposes(prev =>
       prev.includes(purpose) ? prev.filter(p => p !== purpose) : [...prev, purpose]
+    )
+  }
+
+  const toggleCert = (cert: string) => {
+    setSelectedCerts(prev =>
+      prev.includes(cert) ? prev.filter(c => c !== cert) : [...prev, cert]
     )
   }
 
@@ -93,6 +114,7 @@ export default function RegisterPage() {
           verification_status: 'pending',
           latitude: addressResult?.latitude || null,
           longitude: addressResult?.longitude || null,
+          certifications: selectedCerts,
         })
         .select()
         .single()
@@ -269,6 +291,18 @@ export default function RegisterPage() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-gray-700 block mb-3">자격증 <span className="text-xs text-gray-400 font-normal">(선택 · 복수 선택)</span></label>
+              <div className="flex flex-wrap gap-2">
+                {CERTIFICATION_OPTIONS.map(cert => (
+                  <button key={cert} onClick={() => toggleCert(cert)}
+                    className={'px-3 py-2 rounded-full text-xs font-semibold transition-all ' + (selectedCerts.includes(cert) ? 'bg-[#0A8A7B] text-white' : 'bg-gray-50 text-gray-500 border border-gray-100')}>
+                    {cert}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-2">🏅 보유한 자격증을 선택하면 프로필에 표시됩니다. 가입 후 마이페이지에서도 수정할 수 있어요.</p>
             </div>
           </div>
         )}
