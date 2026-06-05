@@ -334,9 +334,9 @@ export default function RegisterPage() {
             <div className="bg-[#E8F6F4] rounded-2xl p-5 mb-8 text-left">
               <p className="text-sm font-bold text-[#067A6C] mb-2">📋 다음 단계</p>
               <ol className="text-sm text-gray-700 space-y-1.5 list-decimal list-inside">
-                <li>물찾사가 면허번호를 보건복지부에 조회합니다</li>
-                <li>인증 완료 시 카톡으로 활성화 링크가 발송됩니다</li>
-                <li>활성화 후 검색 결과에 노출됩니다</li>
+                <li>물찾사가 면허번호를 확인하고 검토합니다</li>
+                <li>승인 완료 시 등록하신 연락처로 안내 문자가 발송됩니다</li>
+                <li>승인 후 검색 결과에 프로필이 노출됩니다</li>
               </ol>
             </div>
             <button onClick={() => router.push('/')} className="px-8 py-3 bg-[#0A8A7B] text-white rounded-xl font-semibold">홈으로</button>
